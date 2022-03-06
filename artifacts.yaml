@@ -29,6 +29,15 @@ spec:
       # artifacts can be directories as well as files
       - name: hello-art
         path: /tmp/hello_world.txt
+        gcs:
+          endpoint: storage.googleapis.com
+          bucket: artifacts-bucket1
+          accessKeySecret:
+            name: gcp-artifact-bucket-cred
+            key: accessKey
+          secretKeySecret:
+            name: gcp-artifact-bucket-cred
+            key: secretKey
 
   - name: print-message
     inputs:
@@ -37,6 +46,15 @@ spec:
       # and put it at /tmp/message
       - name: message
         path: /tmp/message
+        s3:
+          endpoint: storage.googleapis.com
+          bucket: artifacts-bucket1
+          accessKeySecret:
+            name: gcp-artifact-bucket-cred
+            key: accessKey
+          secretKeySecret:
+            name: gcp-artifact-bucket-cred
+            key: secretKey
     container:
       image: alpine:latest
       command: [sh, -c]
