@@ -48,4 +48,3 @@ spec:
           parameters:
             - name: message
               value: E
-

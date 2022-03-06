@@ -1,0 +1,71 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: adservice-createimage-
+spec:
+  entrypoint: clone-build-docker
+  volumeClaimTemplates:                 # define volume, same syntax as k8s Pod spec
+  - metadata:
+      name: git-repo                     # name of volume claim
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 5Gi                  # Gi => 1024 * 1024 * 1024
+  volumes:
+    - name: gcr-credentials
+      secret:
+        secretName: gcr-access
+        items:
+          - key: .dockerconfigjson
+            path: config.json
+    - name: github-credentials
+      secret:
+        secretName: github-access-secret
+        defaultMode: 256
+        items:
+          - key: private_key
+            path: id_rsa
+          - key: hosts_to_trust
+            path: known_hosts
+  templates:
+  - name: clone-build-docker
+    steps:
+    - - name: clone-the-code
+        template: git-clone
+    - - name: build-the-docker-image
+        template: docker-build
+    - - name: deploy-to-kubernetes
+        template: kubectl-apply
+
+  - name: git-clone
+    container:
+      image: alpine/git
+      command: ["git", "clone"]
+      args: ["https://github.com/Coit-IO/coit-home-commerce.git"]
+      workingDir: /mnt/source-code
+      volumeMounts:                     # same syntax as k8s Pod spec
+      - name: git-repo
+        mountPath: /mnt/source-code
+      - name: github-credentials
+        mountPath: /root/.ssh/
+
+  - name: docker-build
+    container:
+      image: gcr.io/kaniko-project/executor:latest
+      command: ["executor"]
+      args: ["--dockerfile=/mnt/source-code/coit-home-commerce/src/adservice/Dockerfile", "--context=/mnt/source-code/coit-home-commerce/src/adservice/", "--destination=gcr.io/rising-area-331809/adservice:4.0.0"]
+      # Mount workdir volume at /mnt/vol before invoking docker/whalesay
+      volumeMounts:                     # same syntax as k8s Pod spec
+      - name: git-repo
+        mountPath: /mnt/source-code
+      - name: gcr-credentials
+        mountPath: /kaniko/.docker/
+  - name: kubectl-apply 
+    container: 
+      image: bitnami/kubectl
+      command: ["kubectl", "apply", "-f"]
+      args: ["/mnt/source-code/coit-home-commerce/kubernetes-manifests/adservice.yaml"]
+      volumeMounts:                     # same syntax as k8s Pod spec
+      - name: git-repo
+        mountPath: /mnt/source-code

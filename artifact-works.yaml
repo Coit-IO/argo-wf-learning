@@ -1,0 +1,39 @@
+kind: Workflow 
+metadata: 
+  generateName: output-artifact-gcs- 
+spec: 
+  entrypoint: whalesay 
+  templates: 
+  - name: whalesay 
+    container: 
+      image: docker/whalesay:latest 
+      command: [sh, -c] 
+      args: ["cowsay hello world | tee /tmp/hello_world.txt"] 
+      outputs: 
+        artifacts: 
+        - name: message 
+          path: /tmp 
+          gcs: 
+            bucket: artifact-bucket2 
+            key: /myartifacts
+
+
+$ cat artifact-gcs-input.yaml # This example demonstrates the loading of a hard-wired input artifact from a GCP storage. # # It uses a GCP Service Account Key stored as a regular Kubernetes secret, to access GCP storage. # To create the secret required for this example, first run the following command: # # $ kubectl create secret generic my-gcs-credentials --from-file=serviceAccountKey= # apiVersion: http://argoproj.io/v1alpha1 
+kind: Workflow 
+metadata: 
+generateName: input-artifact-gcs- 
+spec: 
+entrypoint: input-artifact-gcs-example 
+templates: 
+- name: input-artifact-gcs-example 
+inputs: 
+artifacts: 
+- name: my-art 
+path: /my-artifact 
+gcs: 
+bucket: artifact-bucket2 
+# key could be either a file or a directory. 
+key: /
+# serviceAccountKeySecret is a secret selector. 
+# It references the k8s secret named 'my-gcs-credentials'. 
+# This secret is expe

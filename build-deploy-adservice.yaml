@@ -7,7 +7,7 @@ spec:
   arguments:
     parameters:
       - name: adservice-image
-        value: gcr.io/rising-area-331809/adservice:3.3.3
+        value: gcr.io/rising-area-331809/adservice:3.3.4
   volumes:
     - name: gcr-credentials
       secret:

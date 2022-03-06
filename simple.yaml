@@ -15,8 +15,3 @@ spec:
       image: alpine:latest
       command: [echo]
       args: ["hello world"]
-  - name: hello1-template              # name of the template
-    container:
-      image: alpine:latest
-      command: [echo]
-      args: ["hello world1"]
